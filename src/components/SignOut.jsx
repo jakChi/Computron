@@ -1,10 +1,11 @@
 /* eslint-disable react/prop-types */
 import { signOut } from "firebase/auth";
 
-const SignOut = ({ auth }) => {
+const SignOut = ({ auth, changeUserState }) => {
   const signingOut = () => {
     signOut(auth)
       .then(() => {
+        changeUserState(false);
         console.log(" user signed out!");
       })
       .catch((error) => {
@@ -12,8 +13,8 @@ const SignOut = ({ auth }) => {
       });
   };
   return (
-    <button className="btn" onClick={signingOut}>
-      გამოსვლა
+    <button id="sing-out-btn" className="auth-btn" onClick={signingOut}>
+      გასვლა
     </button>
   );
 };

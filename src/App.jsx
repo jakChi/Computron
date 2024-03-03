@@ -5,8 +5,8 @@ import "./App.css";
 
 import { initializeApp } from "firebase/app";
 //import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
 //import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -21,20 +21,37 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-//const db = getFirestore(app);
 
 const App = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(auth.currentUser);
+
+  const monitorUser = () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("user has logged in!");
+        setUser(user);
+      } else {
+        console.log("user hasn't looged in!");
+        setUser(null);
+      }
+    });
+  };
+
+  useEffect(() => {
+    monitorUser();
+  }, []);
 
   return (
     <div className="App">
       <header>
-        <h1 className="title">თბილისი ფორუმი</h1>
-        <SignOut auth={auth} />
+        <h1 className="title">Computron</h1>
+        {user ? (
+          <SignOut auth={auth} changeUserState={setUser} />
+        ) : (
+          <SignIn auth={auth} changeUserState={setUser} />
+        )}
       </header>
-      <section className="chat-section">
-        {user ? <ChatRoom app={app} auth={auth} /> : <SignIn auth={auth} setUser={setUser} />}
-      </section>
+      <main>{user && <ChatRoom app={app} auth={auth} />}</main>
     </div>
   );
 };

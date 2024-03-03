@@ -1,34 +1,37 @@
-import { useRef, useState } from "react";
-import { getFirestore, orderBy } from "firebase/firestore";
+/* eslint-disable react/prop-types */
+import { useEffect, useRef, useState } from "react";
 import ChatMessage from "./ChatMessage";
 import {
+  getFirestore,
   collection,
-  getDocs,
   query,
+  orderBy,
+  onSnapshot,
   addDoc,
   Timestamp,
 } from "firebase/firestore";
 
 const ChatRoom = ({ app, auth }) => {
-  const dataBase = getFirestore(app)
+  const dataBase = getFirestore(app);
 
   const dummy = useRef();
   const [messages, setMessages] = useState([]);
   const [formValue, setFormValue] = useState("");
 
-  const getMessages = async () => {
-    const messagesQuery = query(collection(dataBase, "messages"), orderBy("createdAt", "asc"));
-    const querySnapshot = await getDocs(messagesQuery);
+  useEffect(() => {
+    const messagesQuery = query(
+      collection(dataBase, "messages"),
+      orderBy("createdAt", "asc")
+    );
 
-    setMessages(querySnapshot.docs.map((doc) => doc.data()));
-
-    console.log("querySnapshot has called: ", querySnapshot);
-
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, " => ", doc.data());
+    const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
+      const newData = querySnapshot.docs.map((doc) => doc.data());
+      setMessages(newData);
+      console.log("Current messages: ", messages);
     });
-  }
+
+    return unsubscribe;
+  }, []);
 
   //sending messages function
   const sendMessage = async (e) => {
@@ -49,19 +52,19 @@ const ChatRoom = ({ app, auth }) => {
 
   return (
     <>
-      <main>
+      <section className="chat-section">
         {messages.map((doc) => (
           <ChatMessage key={doc.id} message={doc} auth={auth} />
         ))}
         <span ref={dummy}></span>
-      </main>
+      </section>
       <form onSubmit={sendMessage}>
         <input
           value={formValue}
           onChange={(e) => setFormValue(e.target.value)}
           placeholder="აქ უნდა ჩაწეროო! ✏️"
         />
-        <button type="submit" disabled={!formValue} onClick={getMessages}>
+        <button type="submit" disabled={!formValue}>
           ✈️
         </button>
       </form>
